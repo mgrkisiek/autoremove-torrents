@@ -26,9 +26,7 @@
 环境要求
 -------------
 
-* Python 2.7 或 Python 3
-
-推荐使用 Python 3.6 或更高版本的 Python。
+* Python 3.9 或更高版本
 
 
 快速开始
@@ -49,7 +47,7 @@
 
     git clone https://github.com/jerrymakesjelly/autoremove-torrents.git
     cd autoremove-torrents
-    python3 setup.py install
+    pip install .
 
 
 编写配置文件

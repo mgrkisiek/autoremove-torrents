@@ -22,7 +22,7 @@ Install from GitHub
 
    git clone https://github.com/jerrymakesjelly/autoremove-torrents.git
    cd autoremove-torrents
-   python3 setup.py install
+   pip install .
 
 Run
 ---
@@ -80,54 +80,12 @@ Also, it equals to:
 Uninstall
 ---------
 
-Uninstall from pip
-++++++++++++++++++
-
-If your autoremove-torrents was installed via pip, you can simply uninstall it by using pip:
+Whether autoremove-torrents was installed from PyPI or from a GitHub checkout with ``pip install .``, uninstall it with pip:
 
 .. code-block:: bash
 
     pip uninstall autoremove-torrents
 
+.. note::
 
-Uninstall manually
-++++++++++++++++++
-
-However, if it was installed by ``setup.py``, you need to remove all the files manually.
-
-Step1
-#####
-
-.. code-block:: bash
-
-    cd autoremove-torrents
-
-
-Step2
-#####
-
-Reinstall the program and record which files were copied:
-
-.. code-block:: bash
-
-    python3 setup.py install --record files.txt
-
-
-Step3
-#####
-
-Use ``xargs`` to remove each file:
-
-.. code-block:: bash
-
-    cat files.txt | xargs rm -rf
-
-
-Or if you're running Windows, use Powershell:
-
-.. code-block:: ps1
-
-    Get-Content files.txt | ForEach-Object {Remove-Item $_ -Recurse -Force}
-
-
-Reference: `https://stackoverflow.com/questions/1550226/python-setup-py-uninstall <https://stackoverflow.com/questions/1550226/python-setup-py-uninstall>`_
+   Versions installed with the deprecated ``python3 setup.py install`` command are not tracked by pip. Remove the ``autoremove_torrents-*.egg`` directory from your ``site-packages`` and the ``autoremove-torrents`` script from your ``bin`` directory manually.

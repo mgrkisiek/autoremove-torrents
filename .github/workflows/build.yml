@@ -116,8 +116,6 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [
-          "3.7",
-          "3.8",
           "3.9",
           "3.10",
           "3.11",
@@ -135,9 +133,8 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest
         python -m pip install --upgrade pytest
-        python -m pip install --upgrade setuptools
         python -m pip install -r dev-requirements.txt
-        python setup.py install
+        python -m pip install .
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names

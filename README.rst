@@ -29,7 +29,7 @@ Readme version in other languages: `简体中文`_.
 
 Requirements
 -------------
-* Python 2.7 or Python 3
+* Python 3.9 or later
 
 We recommend you to use Python 3.6 or higher version of Python.
 
@@ -52,7 +52,7 @@ Install from GitHub
 
     git clone https://github.com/jerrymakesjelly/autoremove-torrents.git
     cd autoremove-torrents
-    python3 setup.py install
+    pip install .
 
 
 Write your configuration file
