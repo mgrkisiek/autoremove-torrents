@@ -39,6 +39,8 @@ class ConditionLexer(object):
 
     def __init__(self):
         # Build the lexer
-        self.lexer = lex.lex(module=self, optimize=1)
+        # Use the pre-generated table shipped in this package; a bare "lextab" is looked up as a
+        # top-level module, which fails and makes PLY rebuild and rewrite it into site-packages
+        self.lexer = lex.lex(module=self, optimize=1, lextab=__package__ + ".lextab")
         # Set logger
         self._logger = logger.Logger.register(__name__)

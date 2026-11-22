@@ -119,7 +119,8 @@ class ConditionParser(object):
     def __init__(self, expression):
         # Initialize lexer and parser
         self.lexer = ConditionLexer()
-        self.parser = yacc.yacc(module=self, optimize=1)
+        # Use the pre-generated table shipped in this package and never write it at runtime
+        self.parser = yacc.yacc(module=self, optimize=1, tabmodule=__package__ + ".parsetab", write_tables=False)
         # Save expression
         self._expression = expression
         # Logger
