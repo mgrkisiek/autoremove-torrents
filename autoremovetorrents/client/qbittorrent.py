@@ -17,7 +17,9 @@ class qBittorrent(object):
             self._host = host
             # Requests Session
             self._session = requests.Session()
-        
+            # qBittorrent 3.3.x (after 3.3.3) rejects requests without Referer/Origin (CSRF protection)
+            self._session.headers.update({'Referer': self._host})
+
         # Check API Compatibility
         def check_compatibility(self):
             request = self._session.get(self._host+'/version/api')
@@ -70,7 +72,10 @@ class qBittorrent(object):
             self._host = host
             # Requests Session
             self._session = requests.Session()
-        
+            # Without Referer, qBittorrent 3.3.x answers this probe with 401 (CSRF protection) instead of 404,
+            # which made v3 clients look compatible with API v2
+            self._session.headers.update({'Referer': self._host})
+
         # Check API Compatibility
         def check_compatibility(self):
             request = self._session.get(self._host+'/api/v2/app/webapiVersion')
@@ -142,7 +147,8 @@ class qBittorrent(object):
         except Exception as exc:
             raise ConnectionFailure(str(exc))
         
-        if request.status_code == 200:
+        # qBittorrent 5.x answers a successful login with 204 No Content
+        if 200 <= request.status_code < 300:
             if request.text == 'Fails.': # Fail
                 raise LoginFailure(request.text)
         else:
@@ -205,6 +211,9 @@ class qBittorrent(object):
                     torrent_obj.category = [torrent['category']] if len(torrent['category']) > 0 else []
                 elif 'label' in torrent:
                     torrent_obj.category = [torrent['label']] if len(torrent['label']) > 0 else []
+                # Tags (qBittorrent 4.1+) are used as labels
+                if 'tags' in torrent:
+                    torrent_obj.label = [tag.strip() for tag in torrent['tags'].split(',') if len(tag.strip()) > 0]
                 torrent_obj.tracker = [tracker['url'] for tracker in trackers]
                 torrent_obj.status = qBittorrent._judge_status(torrent['state'])
                 torrent_obj.stalled = torrent['state'] == 'stalledUP' or torrent['state'] == 'stalledDL'
@@ -268,7 +277,7 @@ class qBittorrent(object):
     def remove_torrents(self, torrent_hash_list, remove_data):
         request = self._request_handler.delete_torrents_and_data(torrent_hash_list) if remove_data \
             else self._request_handler.delete_torrents(torrent_hash_list)
-        if request.status_code != 200:
+        if not 200 <= request.status_code < 300:
             return ([], [{
                 'hash': torrent,
                 'reason': 'The server responses HTTP %d.' % request.status_code,

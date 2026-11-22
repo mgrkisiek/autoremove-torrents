@@ -1,0 +1,15 @@
+# Only pyproject.toml, README.rst, LICENSE, autoremovetorrents/ and docker/ are copied into the image
+*
+!pyproject.toml
+!README.rst
+!LICENSE
+!autoremovetorrents/
+!docker/
+# Local virtualenv and caches inside the package directory
+autoremovetorrents/bin
+autoremovetorrents/include
+autoremovetorrents/lib
+autoremovetorrents/lib64
+autoremovetorrents/pyvenv.cfg
+**/__pycache__
+**/*.py[cod]

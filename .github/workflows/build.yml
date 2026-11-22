@@ -1,11 +1,20 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+# Lint and test with every supported Python version against real torrent clients,
+# and check that the Docker image builds
 
 name: build
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
+  # Python version whose coverage report is sent to Codacy
+  COVERAGE_PYTHON_VERSION: "3.13"
   DELUGE_1_HOST: localhost:48846
   DELUGE_1_USERNAME: localclient
   DELUGE_1_PASSWORD: set-later
@@ -30,7 +39,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
     services:
       qbittorrent-latest:
         image: lscr.io/linuxserver/qbittorrent:latest
@@ -46,7 +55,7 @@ jobs:
           - 20000:6881
           - 20000:6881/udp
       qbittorrent-3:
-        image: wernight/qbittorrent:3.3.3
+        image: wernight/qbittorrent:3.3.13
         env:
           PUID: 1001
           PGID: 1001
@@ -116,28 +125,30 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [
-          "3.7",
-          "3.8",
           "3.9",
           "3.10",
           "3.11",
-          "3.12"
+          "3.12",
+          "3.13",
+          "3.14"
         ]
+        include:
+          # Python 3.9 is not available on ubuntu-latest (26.04) any more
+          - python-version: "3.9"
+            os: ubuntu-24.04
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
+        cache: pip
+        cache-dependency-path: pyproject.toml
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install flake8 pytest
-        python -m pip install --upgrade pytest
-        python -m pip install --upgrade setuptools
-        python -m pip install -r dev-requirements.txt
-        python setup.py install
+        python -m pip install ".[test]"
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -156,33 +167,59 @@ jobs:
       run: |
         echo "DELUGE_2_PASSWORD=$(sudo cat /tmp/deluge-latest/config/auth | sed 's/.*:\(.*\):.*/\1/g')" >> $GITHUB_ENV
         echo "DELUGE_1_PASSWORD=$(sudo cat /tmp/deluge-1/config/auth | sed 's/.*:\(.*\):.*/\1/g')" >> $GITHUB_ENV
-    - name: Setup passwords of qBittorrent latest
+    - name: Get temporary password of qBittorrent latest
       run: |
-        docker stop ${{ job.services.qbittorrent-latest.id }}
-        echo 'WebUI\Password_PBKDF2="@ByteArray(+BwJe86psDlDzA5u7ebg9Q==:yZeQKzvuRW/Mn+qL0FS8Nt91A53x5Ow8YGNOq0KusmleU9xn60RWx9kDXKOEqIe+eJX5bQ9UJ4GgR16UWprRSw==)"' | sudo tee -a /tmp/qbittorrent-latest/config/qBittorrent/qBittorrent.conf
-        docker start ${{ job.services.qbittorrent-latest.id }}
+        # qBittorrent 4.6.1+ has no default password and prints a temporary one at startup
+        for i in $(seq 1 60); do
+          password=$(docker logs ${{ job.services.qbittorrent-latest.id }} 2>&1 \
+            | sed -n 's/.*temporary password is provided for this session: *\([^ ]*\).*/\1/p' | tail -n 1)
+          if [ -n "$password" ]; then break; fi
+          sleep 2
+        done
+        if [ -z "$password" ]; then
+          docker logs ${{ job.services.qbittorrent-latest.id }}
+          echo "::error::Could not find the temporary password of qBittorrent latest"
+          exit 1
+        fi
+        echo "::add-mask::$password"
+        echo "QBITTORRENT_4_PASSWORD=$password" >> $GITHUB_ENV
     - name: Sleep for a while
       run: |
         sleep $((10 + $RANDOM % 50))
     - name: Test with pytest
       run: |
-        py.test -s --cov-report=xml --cov --log-level=INFO
+        python -m pytest -s --cov-report=xml --cov=autoremovetorrents --log-level=INFO
     - name: Save coverage report
-      uses: actions/upload-artifact@v2
+      if: matrix.python-version == env.COVERAGE_PYTHON_VERSION
+      uses: actions/upload-artifact@v7
       with:
-        name: coverage.xml
+        name: coverage
         path: coverage.xml
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    - name: Build Docker image
+      run: docker build -t autoremove-torrents:ci .
+    - name: Check that the image runs
+      run: |
+        docker run --rm --entrypoint autoremove-torrents autoremove-torrents:ci --conf=/nonexistent 2>&1 \
+          | grep "Auto Remove Torrents"
   codacy-coverage-reporter:
     runs-on: ubuntu-latest
     name: codacy-coverage-reporter
     needs: build
+    env:
+      CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v7
       - name: Load coverage report
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v8
         with:
-          name: coverage.xml
+          name: coverage
       - name: Run codacy-coverage-reporter
+        # Forks don't have the Codacy token, so skip uploading there
+        if: env.CODACY_PROJECT_TOKEN != ''
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}

@@ -41,7 +41,11 @@
         "up_speed_avg": 78804,
         "uploaded": 8564552428,
         "uploaded_session": 8564552428,
-        "upspeed": 984644
+        "upspeed": 984644,
+        "labels": [
+            "Movies",
+            "HD"
+        ]
     },
     {
         "added_on": 1526720005,
@@ -85,7 +89,10 @@
         "up_speed_avg": 808605,
         "uploaded": 51623504177,
         "uploaded_session": 51623504177,
-        "upspeed": 2886504
+        "upspeed": 2886504,
+        "labels": [
+            "Movies"
+        ]
     },
     {
         "added_on": 1526731573,
@@ -129,7 +136,10 @@
         "up_speed_avg": 456008,
         "uploaded": 812985418,
         "uploaded_session": 812985418,
-        "upspeed": 0
+        "upspeed": 0,
+        "labels": [
+            "TV"
+        ]
     },
     {
         "added_on": 1525970567,
@@ -173,7 +183,11 @@
         "up_speed_avg": 832684,
         "uploaded": 43783272788,
         "uploaded_session": 0,
-        "upspeed": 0
+        "upspeed": 0,
+        "labels": [
+            "TV",
+            "HD"
+        ]
     },
     {
         "added_on": 1526712743,
@@ -217,7 +231,10 @@
         "up_speed_avg": 851779,
         "uploaded": 29372377819,
         "uploaded_session": 29372377819,
-        "upspeed": 0
+        "upspeed": 0,
+        "labels": [
+            "Keep"
+        ]
     },
     {
         "added_on": 1526721182,
@@ -261,7 +278,8 @@
         "up_speed_avg": 37146,
         "uploaded": 23420454865,
         "uploaded_session": 23420454865,
-        "upspeed": 121201
+        "upspeed": 121201,
+        "labels": []
     },
     {
         "added_on": 1526733335,
@@ -305,7 +323,8 @@
         "up_speed_avg": 812996,
         "uploaded": 18854220629,
         "uploaded_session": 18854220629,
-        "upspeed": 0
+        "upspeed": 0,
+        "labels": []
     },
     {
         "added_on": 1526721182,
@@ -330,7 +349,7 @@
         "num_seeds": 0,
         "priority": 0,
         "progress": 1,
-        "ratio": 4.2904626716117651,
+        "ratio": 4.290462671611765,
         "ratio_limit": -1,
         "remaining": 0,
         "save_path": "./Downloads/",
@@ -349,7 +368,8 @@
         "up_speed_avg": 801737,
         "uploaded": 32700782429,
         "uploaded_session": 32700782429,
-        "upspeed": 87463
+        "upspeed": 87463,
+        "labels": []
     },
     {
         "added_on": 1525969391,
@@ -374,7 +394,7 @@
         "num_seeds": 0,
         "priority": 0,
         "progress": 1,
-        "ratio": 2.2992650750537251,
+        "ratio": 2.299265075053725,
         "ratio_limit": -1,
         "remaining": 0,
         "save_path": "./Downloads/",
@@ -393,7 +413,8 @@
         "up_speed_avg": 900793,
         "uploaded": 6949286694,
         "uploaded_session": 26198016,
-        "upspeed": 0
+        "upspeed": 0,
+        "labels": []
     },
     {
         "added_on": 1526721182,
@@ -437,7 +458,8 @@
         "up_speed_avg": 152048,
         "uploaded": 32388045222,
         "uploaded_session": 32388045222,
-        "upspeed": 327541
+        "upspeed": 327541,
+        "labels": []
     },
     {
         "added_on": 1526738139,
@@ -461,7 +483,7 @@
         "num_leechs": 96,
         "num_seeds": 0,
         "priority": 3,
-        "progress": 0.16864645481109619,
+        "progress": 0.1686464548110962,
         "ratio": 2.4767990644956646,
         "ratio_limit": -1,
         "remaining": 11445911552,
@@ -481,7 +503,8 @@
         "up_speed_avg": 586125,
         "uploaded": 5750836550,
         "uploaded_session": 5750836550,
-        "upspeed": 442042
+        "upspeed": 442042,
+        "labels": []
     },
     {
         "added_on": 1526738305,
@@ -506,7 +529,7 @@
         "num_seeds": 1,
         "priority": 4,
         "progress": 0.42562440037727356,
-        "ratio": 2.3626755957858889,
+        "ratio": 2.362675595785889,
         "ratio_limit": -1,
         "remaining": 2315255556,
         "save_path": "./Downloads/",
@@ -525,7 +548,8 @@
         "up_speed_avg": 254117,
         "uploaded": 4056422836,
         "uploaded_session": 4056422836,
-        "upspeed": 668038
+        "upspeed": 668038,
+        "labels": []
     },
     {
         "added_on": 1527339181,
@@ -567,7 +591,8 @@
         "up_speed_avg": 661650,
         "uploaded": 1898576526,
         "uploaded_session": 1898576526,
-        "upspeed": 0
+        "upspeed": 0,
+        "labels": []
     },
     {
         "added_on": 1527335909,
@@ -592,7 +617,7 @@
         "num_seeds": 0,
         "priority": 0,
         "progress": 1,
-        "ratio": 0.34457613988414082,
+        "ratio": 0.3445761398841408,
         "ratio_limit": -1,
         "remaining": 0,
         "save_path": "./Downloads/",
@@ -611,7 +636,8 @@
         "up_speed_avg": 482248,
         "uploaded": 107814988,
         "uploaded_session": 107814988,
-        "upspeed": 0
+        "upspeed": 0,
+        "labels": []
     },
     {
         "added_on": 1527343104,
@@ -653,7 +679,8 @@
         "up_speed_avg": 950107,
         "uploaded": 3323768148,
         "uploaded_session": 3323768148,
-        "upspeed": 0
+        "upspeed": 0,
+        "labels": []
     },
     {
         "added_on": 1527335739,
@@ -678,7 +705,7 @@
         "num_seeds": 0,
         "priority": 0,
         "progress": 1,
-        "ratio": 0.34715400154682829,
+        "ratio": 0.3471540015468283,
         "ratio_limit": -1,
         "remaining": 0,
         "save_path": "./Downloads/",
@@ -695,6 +722,7 @@
         "up_speed_avg": 924258,
         "uploaded": 395526144,
         "uploaded_session": 395526144,
-        "upspeed": 8055
+        "upspeed": 8055,
+        "labels": []
     }
 ]

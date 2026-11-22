@@ -1,0 +1,12 @@
+--conf=tests/test_main/config.yml
+-c tests/test_main/config.yml
+-v -c tests/test_main/config.yml
+--view -c tests/test_main/config.yml
+-v --task=task1 -c tests/test_main/config.yml
+-t task1 -c tests/test_main/config.yml
+-t task10000 -c tests/test_main/config.yml
+-c tests/test_main/config.yml -l tests
+--conf=tests/test_main/config.yml --log=tests
+--conf=tests/test_main/config.yml --debug
+-c tests/test_main/config.yml -d
+abcdefghijklmnopqrstuvwxyz

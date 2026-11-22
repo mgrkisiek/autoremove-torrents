@@ -1,0 +1,8 @@
+test:
+  labels:
+    - Movies
+    - TV
+  excluded_labels: HD
+remain:
+  - Torrent - 2
+  - Torrent - 3

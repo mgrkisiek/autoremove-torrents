@@ -107,3 +107,17 @@ venv.bak/
 .vscode
 
 .pytest_cache/
+
+# PLY debug output
+parser.out
+
+# Virtualenv created inside the package directory
+autoremovetorrents/bin/
+autoremovetorrents/include/
+autoremovetorrents/lib
+autoremovetorrents/lib64
+autoremovetorrents/pyvenv.cfg
+
+# Local configuration, secrets and logs (examples: config.example.yml, .env.example)
+/config.yml
+/logs/

@@ -3,6 +3,35 @@
 ChangeLog
 ==========
 
+Version 1.6.0
+--------------
+
+*Unreleased*
+
+First release of the `mgrkisiek/autoremove-torrents <https://github.com/mgrkisiek/autoremove-torrents>`_ fork.
+
+New features
+++++++++++++
+
+* rTorrent client (``client: rtorrent``): SCGI over TCP or a UNIX socket, XML-RPC over HTTP(S), and ruTorrent's ``httprpc`` plugin.
+    - Labels are read from ``d.custom1`` (ruTorrent/Flood) and also work as categories.
+    - With ruTorrent's ``httprpc`` plugin, torrents are removed through its API and data is deleted by the ``erasedata`` plugin.
+* Label filters: ``labels``, ``excluded_labels`` and ``all_labels``. Labels are qBittorrent tags and labels in Transmission, Deluge, μTorrent and rTorrent.
+* Docker image and ``docker-compose.yml`` that run the program on a schedule. ``${VAR}`` placeholders in the configuration are filled in from environment variables.
+
+Fixes
++++++
+
+* qBittorrent 5.x: accept ``204 No Content`` (any 2xx) for login and delete.
+* qBittorrent 3.3.x: send ``Referer``, which these versions require since 3.3.3.
+* No more "Couldn't write lextab module" warning when installed read-only.
+
+Packaging
++++++++++
+
+* ``setup.py`` replaced by ``pyproject.toml``; Python 3.9 or later is required.
+* Tests moved to ``tests/``; test dependencies are installed with ``pip install -e ".[test]"``.
+
 Version 1.5.5
 --------------
 

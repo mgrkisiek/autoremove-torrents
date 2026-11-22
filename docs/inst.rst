@@ -6,23 +6,52 @@ Install and Run
 Install
 -------
 
-There are two ways to install ``autoremove-torrents``, but I highly recommend installing from pip. 
+There are two ways to install ``autoremove-torrents``: with pip, or as a Docker container.
 
-Install from pip
+.. note::
+
+   This is a fork of `jerrymakesjelly/autoremove-torrents <https://github.com/jerrymakesjelly/autoremove-torrents>`_.
+   The ``autoremove-torrents`` package on PyPI is the original project, which doesn't include rTorrent support,
+   labels or the Docker image, so install this fork from GitHub.
+
+Install with pip
 ++++++++++++++++
 
 .. code-block:: bash
 
-   pip install autoremove-torrents
+   pip install git+https://github.com/mgrkisiek/autoremove-torrents.git
 
-Install from GitHub
-+++++++++++++++++++
+Or from a local clone:
 
 .. code-block:: bash
 
-   git clone https://github.com/jerrymakesjelly/autoremove-torrents.git
+   git clone https://github.com/mgrkisiek/autoremove-torrents.git
    cd autoremove-torrents
-   python3 setup.py install
+   pip install .
+
+Run with Docker
++++++++++++++++
+
+The Docker image runs ``autoremove-torrents`` on a schedule (every 5 minutes by default).
+Your ``config.yml`` is mounted into the container, and ``${VAR}`` placeholders in it are filled in from environment variables,
+so passwords can stay in an ``.env`` file instead of the config.
+
+.. code-block:: bash
+
+   git clone https://github.com/mgrkisiek/autoremove-torrents.git
+   cd autoremove-torrents
+   cp config.example.yml config.yml   # then edit your strategies
+   cp .env.example .env               # then fill in host, username and password
+   docker compose up -d
+   docker compose logs -f
+
+Settings in ``.env``:
+
+* ``INTERVAL``: seconds between runs (default ``300``).
+* ``EXTRA_ARGS``: extra arguments for every run, e.g. ``--view`` to preview without removing anything.
+* ``PUID``/``PGID``: user and group the container runs as; they must be able to write the ``logs`` directory.
+
+To preview a single run: ``docker compose run --rm autoremove-torrents --view``.
 
 Run
 ---
@@ -80,54 +109,12 @@ Also, it equals to:
 Uninstall
 ---------
 
-Uninstall from pip
-++++++++++++++++++
-
-If your autoremove-torrents was installed via pip, you can simply uninstall it by using pip:
+Whether autoremove-torrents was installed from PyPI or from a GitHub checkout with ``pip install .``, uninstall it with pip:
 
 .. code-block:: bash
 
     pip uninstall autoremove-torrents
 
+.. note::
 
-Uninstall manually
-++++++++++++++++++
-
-However, if it was installed by ``setup.py``, you need to remove all the files manually.
-
-Step1
-#####
-
-.. code-block:: bash
-
-    cd autoremove-torrents
-
-
-Step2
-#####
-
-Reinstall the program and record which files were copied:
-
-.. code-block:: bash
-
-    python3 setup.py install --record files.txt
-
-
-Step3
-#####
-
-Use ``xargs`` to remove each file:
-
-.. code-block:: bash
-
-    cat files.txt | xargs rm -rf
-
-
-Or if you're running Windows, use Powershell:
-
-.. code-block:: ps1
-
-    Get-Content files.txt | ForEach-Object {Remove-Item $_ -Recurse -Force}
-
-
-Reference: `https://stackoverflow.com/questions/1550226/python-setup-py-uninstall <https://stackoverflow.com/questions/1550226/python-setup-py-uninstall>`_
+   Versions installed with the deprecated ``python3 setup.py install`` command are not tracked by pip. Remove the ``autoremove_torrents-*.egg`` directory from your ``site-packages`` and the ``autoremove-torrents`` script from your ``bin`` directory manually.

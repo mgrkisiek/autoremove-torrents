@@ -1,0 +1,27 @@
+# rTorrent behind ruTorrent's httprpc plugin.
+# The RUTORRENT_* placeholders are filled in from the environment (.env) by the Docker container.
+# Torrents are removed through httprpc's API; with delete_data the files are deleted
+# by ruTorrent's erasedata plugin.
+rutorrent:
+  client: rtorrent
+  host: ${RUTORRENT_HOST}
+  username: ${RUTORRENT_USERNAME}  # HTTP basic auth of ruTorrent
+  password: ${RUTORRENT_PASSWORD}
+  strategies:
+    # Remove autobrr_auto torrents that are done seeding: ratio above 2 or seeding for more than 14 days
+    seeded_enough:
+      labels: autobrr_auto   # Only torrents with this ruTorrent label
+      status:
+        - Uploading
+        - Paused
+        - Stopped
+      remove: ratio > 2 or seeding_time > 1209600
+    # Keep at least 500 GiB free, removing the oldest finished autobrr_auto torrents first
+    keep_free_space:
+      labels: autobrr_auto   # Only torrents with this ruTorrent label
+      status: Uploading
+      remote_free_space:
+        min: 500
+        path: /home/user/torrents   # Download directory on the rTorrent host
+        action: remove-old-seeds
+  delete_data: true

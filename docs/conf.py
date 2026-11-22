@@ -20,8 +20,8 @@ from autoremovetorrents.version import __version__
 # -- Project information -----------------------------------------------------
 
 project = 'autoremove-torrents'
-copyright = '2020, jerrymakesjelly'
-author = 'jerrymakesjelly'
+copyright = '2018-2026, jerrymakesjelly and contributors'
+author = 'jerrymakesjelly, Tomasz Kisielewski'
 
 # The full version, including alpha/beta/rc tags
 release = __version__

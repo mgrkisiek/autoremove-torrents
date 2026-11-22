@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Configuration reference
+    url: https://github.com/mgrkisiek/autoremove-torrents/blob/master/docs/config.rst
+    about: All filters, conditions and client options

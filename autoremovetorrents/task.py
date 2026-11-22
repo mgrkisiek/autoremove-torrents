@@ -7,6 +7,7 @@ from .client.qbittorrent import qBittorrent
 from .client.transmission import Transmission
 from .client.utorrent import uTorrent
 from .client.deluge import Deluge
+from .client.rtorrent import rTorrent
 from .exception.nosuchclient import NoSuchClient
 from .strategy import Strategy
 from autoremovetorrents.torrent import Torrent
@@ -73,6 +74,7 @@ class Task(object):
             u'μtorrent': uTorrent,
             u'utorrent': uTorrent, # Alias for μTorrent
             u'deluge': Deluge,
+            u'rtorrent': rTorrent,
         }
         self._client_name = self._client_name.lower() # Set the client name to be case insensitive
         if self._client_name not in clients:
