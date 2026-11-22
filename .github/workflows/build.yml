@@ -55,7 +55,7 @@ jobs:
           - 20000:6881
           - 20000:6881/udp
       qbittorrent-3:
-        image: wernight/qbittorrent:3.3.3
+        image: wernight/qbittorrent:3.3.13
         env:
           PUID: 1001
           PGID: 1001
