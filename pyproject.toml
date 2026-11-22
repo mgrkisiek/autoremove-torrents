@@ -5,16 +5,31 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "autoremove-torrents"
 dynamic = ["version"]
-description = "Automatically remove torrents according to your strategies."
+description = "Automatically remove torrents from qBittorrent, Transmission, Deluge, μTorrent and rTorrent according to your strategies."
 readme = { file = "README.rst", content-type = "text/x-rst" }
 license = "MIT"
 license-files = ["LICENSE"]
-authors = [{ name = "jerrymakesjelly", email = "ganzhaoyu037@gmail.com" }]
-keywords = ["python", "autoremove", "torrent"]
+authors = [
+    { name = "jerrymakesjelly", email = "ganzhaoyu037@gmail.com" },
+    { name = "Tomasz Kisielewski" },
+]
+maintainers = [{ name = "Tomasz Kisielewski" }]
+keywords = ["torrent", "autoremove", "qbittorrent", "transmission", "deluge", "rtorrent", "rutorrent", "seedbox"]
 classifiers = [
+    "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Communications :: File Sharing",
     "Topic :: Utilities",
 ]
 requires-python = ">=3.9"
@@ -25,9 +40,21 @@ dependencies = [
     "requests",
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "requests-mock",
+    "flake8",
+]
+
 [project.urls]
-Homepage = "https://github.com/jerrymakesjelly/autoremove-torrents"
-Documentation = "https://autoremove-torrents.readthedocs.io/"
+Homepage = "https://github.com/mgrkisiek/autoremove-torrents"
+Documentation = "https://github.com/mgrkisiek/autoremove-torrents/blob/master/docs/config.rst"
+Changelog = "https://github.com/mgrkisiek/autoremove-torrents/blob/master/docs/changelog.rst"
+Issues = "https://github.com/mgrkisiek/autoremove-torrents/issues"
+Upstream = "https://github.com/jerrymakesjelly/autoremove-torrents"
 
 [project.scripts]
 autoremove-torrents = "autoremovetorrents.main:main"
@@ -37,3 +64,6 @@ include = ["autoremovetorrents*"]
 
 [tool.setuptools.dynamic]
 version = { attr = "autoremovetorrents.version.__version__" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,7 +1,14 @@
 FROM python:3.12-slim
 
+LABEL org.opencontainers.image.title="autoremove-torrents" \
+      org.opencontainers.image.description="Automatically remove torrents according to your strategies, on a schedule" \
+      org.opencontainers.image.source="https://github.com/mgrkisiek/autoremove-torrents" \
+      org.opencontainers.image.licenses="MIT"
+
 WORKDIR /app
-COPY . /app
+COPY pyproject.toml README.rst LICENSE ./
+COPY autoremovetorrents ./autoremovetorrents
+COPY docker ./docker
 RUN pip install --no-cache-dir . \
     && useradd --create-home --uid 1000 app \
     && mkdir -p /config /logs \
@@ -17,4 +24,7 @@ ENV INTERVAL=300 \
     LOG_DIR=/logs \
     EXTRA_ARGS=""
 
+VOLUME ["/logs"]
+# Log files go to the working directory when --log is not given
+WORKDIR /logs
 ENTRYPOINT ["/app/docker/entrypoint.sh"]

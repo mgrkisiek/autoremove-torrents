@@ -22,6 +22,6 @@ rutorrent:
       status: Uploading
       remote_free_space:
         min: 500
-        path: /home/kisiek/torrents/rtorrent
+        path: /home/user/torrents   # Download directory on the rTorrent host
         action: remove-old-seeds
   delete_data: true

@@ -2,6 +2,12 @@
 ======================
 |PyPI| |GithubActionsCI| |ReadTheDocs| |Coverage| |Codacy| |Downloads| |MIT|
 
+.. note::
+
+   本中文说明可能落后于 `英文版 README <README.rst>`_ 。本分支新增的 rTorrent 支持、标签过滤和 Docker 镜像请参阅英文版。
+   This Chinese README may be outdated; see the English README for rTorrent, labels and Docker.
+
+
 这个程序可以帮助你删除种子。现在你再也不用担心你的磁盘空间了——通过你设置的策略，程序会帮你检查每一个种子是否满足删除的条件；如果是，那就自动地删除它。
 
 这个程序支持 qBittorrent、Transmission 或 μTorrent。 如果你喜欢，可以点个星星 :star2: :)
@@ -45,7 +51,7 @@
 ^^^^^^^^^^^^^^^^^^^^
 ::
 
-    git clone https://github.com/jerrymakesjelly/autoremove-torrents.git
+    git clone https://github.com/mgrkisiek/autoremove-torrents.git
     cd autoremove-torrents
     pip install .
 
@@ -107,7 +113,7 @@
 
 更新日志
 ----------
-**2024.4.27 星期六*：版本 1.5.5。
+**2024.4.27 星期六**：版本 1.5.5。
 
 * 修复了 qBittorrent 4.5 及其后续版本的兼容性问题。(#157) (#173) (#174) (#182) (#186) 感谢 @Siriussee！
     - 有关 API 变更的信息，请见 qbittorrent/qBittorrent#17563。

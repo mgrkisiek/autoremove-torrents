@@ -22,12 +22,10 @@ For Windows, use the batch file `make.bat`:
 
 ::
 
-    ./make html
+    make.bat html
 
 
-Beside, the documentation on `autoremove-torrents.readthedocs.io`_ will be updated by Read the Docs service automatically when commits are merged to the `master` branch. We needn't to update them manually.
-
-.. _autoremove-torrents.readthedocs.io: https://autoremove-torrents.readthedocs.io/
+The generated HTML is written to ``_build/html``. The ``.readthedocs.yaml`` file in the repository root lets you host these documents on Read the Docs.
 
 How to generate Simplified-Chinese translation?
 ------------------------------------------------

@@ -1,18 +1,15 @@
-.git
-.github
-.env
-config.yml
-logs
-*.log
-build
-*.egg-info
-__pycache__
-*.py[cod]
-pytest
-docs
-# Local virtualenv created inside the package directory
+# Only pyproject.toml, README.rst, LICENSE, autoremovetorrents/ and docker/ are copied into the image
+*
+!pyproject.toml
+!README.rst
+!LICENSE
+!autoremovetorrents/
+!docker/
+# Local virtualenv and caches inside the package directory
 autoremovetorrents/bin
+autoremovetorrents/include
 autoremovetorrents/lib
 autoremovetorrents/lib64
-autoremovetorrents/include
 autoremovetorrents/pyvenv.cfg
+**/__pycache__
+**/*.py[cod]
