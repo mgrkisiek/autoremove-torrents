@@ -1,0 +1,14 @@
+services:
+  autoremove-torrents:
+    build: .
+    image: autoremove-torrents:local
+    container_name: autoremove-torrents
+    restart: unless-stopped
+    env_file: .env
+    # Run as the owner of ./logs (set PUID/PGID in .env if not 1000)
+    user: "${PUID:-1000}:${PGID:-1000}"
+    volumes:
+      - ./config.yml:/config/config.yml:ro
+      - ./logs:/logs
+      # Use the host time zone for log timestamps
+      - /etc/localtime:/etc/localtime:ro

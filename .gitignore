@@ -107,3 +107,8 @@ venv.bak/
 .vscode
 
 .pytest_cache/
+
+# Local configuration, secrets and logs
+config.yml
+.env
+logs/

@@ -111,6 +111,7 @@ This program accesses rTorrent via its XML-RPC interface, either directly over S
 * ``host``: One of:
 
   * ``http://127.0.0.1/RPC2`` or ``https://...``: XML-RPC exposed by a web server. ``/RPC2`` is used when no path is given.
+  * ``https://example.com/rutorrent/plugins/httprpc/action.php``: ruTorrent's httprpc plugin. Use this when rTorrent is only reachable through ruTorrent (typical on seedboxes).
   * ``scgi://127.0.0.1:5000``: the TCP port opened with ``network.scgi.open_port`` in ``.rtorrent.rc``.
   * ``scgi:///home/user/.rtorrent.sock``: the UNIX socket opened with ``network.scgi.open_local``.
 
@@ -129,10 +130,24 @@ Example:
          ratio: 2
      delete_data: true
 
+Example for ruTorrent's httprpc plugin (see also ``config.example.yml``):
+
+.. code-block:: yaml
+
+   my_task:
+     client: rtorrent
+     host: https://example.com/rutorrent/plugins/httprpc/action.php
+     username: my_username
+     password: my_password
+     strategies:
+       my_strategy:
+         remove: ratio > 2 or seeding_time > 1209600
+     delete_data: true
+
 .. note::
 
    1. Labels are read from ``d.custom1``, which is where ruTorrent and Flood store them. Comma-separated values are treated as multiple labels. In rTorrent the label is also used as the category, so ``categories`` works too.
-   2. ``d.erase`` never deletes data, so when ``delete_data`` is ``true`` the program runs ``rm -rf`` on the torrent's data path **on the rTorrent host** via ``execute.throw``.
+   2. ``d.erase`` never deletes data, so when ``delete_data`` is ``true`` the program runs ``rm -rf`` on the torrent's data path **on the rTorrent host** via ``execute.throw``. ruTorrent's httprpc plugin rejects ``execute.*`` commands, so with an httprpc host, torrents are removed through httprpc's own API instead (``mode=remove`` / ``mode=removewithdata``), and the data is deleted by ruTorrent's **erasedata** plugin, which must be enabled for ``delete_data``.
    3. rTorrent doesn't record the time of last activity, so ``last_activity`` is not supported. ``seeding_time`` and ``downloading_time`` are calculated from ``d.timestamp.started`` and ``d.timestamp.finished``.
    4. ``remote_free_space`` uses ``d.free_diskspace`` of a torrent stored under the given path.
 

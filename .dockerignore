@@ -1,0 +1,18 @@
+.git
+.github
+.env
+config.yml
+logs
+*.log
+build
+*.egg-info
+__pycache__
+*.py[cod]
+pytest
+docs
+# Local virtualenv created inside the package directory
+autoremovetorrents/bin
+autoremovetorrents/lib
+autoremovetorrents/lib64
+autoremovetorrents/include
+autoremovetorrents/pyvenv.cfg

@@ -5,15 +5,20 @@ import threading
 import time
 import pytest
 
+import json
+
 try: # for Python 3
-    from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCDispatcher
+    from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCDispatcher, SimpleXMLRPCRequestHandler
+    from urllib.parse import parse_qs
 except ImportError: # for Python 2.7
-    from SimpleXMLRPCServer import SimpleXMLRPCServer, SimpleXMLRPCDispatcher
+    from SimpleXMLRPCServer import SimpleXMLRPCServer, SimpleXMLRPCDispatcher, SimpleXMLRPCRequestHandler
+    from urlparse import parse_qs
 
 from autoremovetorrents import logger
 from autoremovetorrents.client.rtorrent import rTorrent, TORRENT_FIELDS
 from autoremovetorrents.strategy import Strategy
 from autoremovetorrents.torrentstatus import TorrentStatus
+from autoremovetorrents.exception.loginfailure import LoginFailure
 
 NOW = 1700000000
 
@@ -42,6 +47,7 @@ class FakeRTorrent(object):
             'E' * 40: _torrent('E' * 40, 'leeching', 'Keep', complete=0),
         }
         self.executed = []
+        self.erased_with_data = []
 
     def register(self, dispatcher):
         dispatcher.register_multicall_functions()
@@ -55,6 +61,7 @@ class FakeRTorrent(object):
             ('d.multicall2', self.d_multicall2),
             ('t.multicall', self.t_multicall),
             ('d.erase', self.d_erase),
+            ('d.hash', self.d_hash),
             ('execute.throw', self.execute_throw),
         ]:
             dispatcher.register_function(func, name)
@@ -72,6 +79,11 @@ class FakeRTorrent(object):
         del self.torrents[hash_]
         return 0
 
+    def d_hash(self, hash_):
+        if hash_ not in self.torrents:
+            raise Exception('Could not find info-hash.')
+        return hash_
+
     def execute_throw(self, target, *args):
         self.executed.append(list(args))
         return 0
@@ -82,6 +94,51 @@ def _serve_http(fake):
     fake.register(server)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     return 'http://127.0.0.1:%d' % server.server_address[1], server.shutdown
+
+
+HTTPRPC_PATH = '/rutorrent/plugins/httprpc/action.php'
+
+
+def _serve_httprpc(fake):
+    # Mimics ruTorrent's httprpc plugin: XML-RPC is forwarded to rTorrent except execute.*,
+    # and form-encoded requests use the httprpc API
+    class Handler(SimpleXMLRPCRequestHandler):
+        rpc_paths = (HTTPRPC_PATH,)
+
+        def do_POST(self):
+            if self.path != HTTPRPC_PATH or self.headers.get('Authorization') != 'Basic dXNlcjpwYXNz': # user:pass
+                self.send_response(401)
+                self.end_headers()
+                return
+            body = self.rfile.read(int(self.headers['Content-Length']))
+            if self.headers.get('Content-Type', '').startswith('application/x-www-form-urlencoded'):
+                self._reply(json.dumps(self._httprpc(parse_qs(body.decode('utf-8')))).encode('utf-8'))
+            elif b'execute.' in body:
+                self.send_response(403)
+                self.end_headers()
+            else:
+                self._reply(self.server._marshaled_dispatch(body))
+
+        def _httprpc(self, form):
+            mode, hashes = form['mode'][0], form.get('hash', [])
+            if mode not in ('remove', 'removewithdata') or any(h not in fake.torrents for h in hashes):
+                return False
+            for h in hashes:
+                del fake.torrents[h]
+                if mode == 'removewithdata':
+                    fake.erased_with_data.append((h, form['v'][0]))
+            return ['0'] * len(hashes)
+
+        def _reply(self, data):
+            self.send_response(200)
+            self.send_header('Content-Length', str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+
+    server = SimpleXMLRPCServer(('127.0.0.1', 0), requestHandler=Handler, logRequests=False, allow_none=True)
+    fake.register(server)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    return 'http://127.0.0.1:%d%s' % (server.server_address[1], HTTPRPC_PATH), server.shutdown
 
 
 def _serve_scgi(fake):
@@ -121,13 +178,17 @@ def _serve_scgi(fake):
     return 'scgi://127.0.0.1:%d' % listener.getsockname()[1], stop
 
 
-@pytest.fixture(params=['http', 'scgi'])
+@pytest.fixture(params=['http', 'scgi', 'httprpc'])
 def client(request, mocker):
     mocker.patch('time.time', return_value=NOW)
     fake = FakeRTorrent()
-    host, stop = (_serve_http if request.param == 'http' else _serve_scgi)(fake)
+    host, stop = {'http': _serve_http, 'scgi': _serve_scgi, 'httprpc': _serve_httprpc}[request.param](fake)
     c = rTorrent(host)
-    c.login('', '')
+    if request.param == 'httprpc':
+        c.login('user', 'pass')
+    else:
+        c.login('', '')
+    c.mode = request.param
     c.fake = fake
     yield c
     stop()
@@ -170,6 +231,9 @@ def test_label_strategy(client):
 
 
 def test_remove(client):
+    if client.mode == 'httprpc':
+        return # Covered by test_remove_httprpc
+
     client.torrents_list()
     success, failed = client.remove_torrents(['A' * 40, 'F' * 40], False)
     assert success == ['A' * 40] and len(failed) == 1 and failed[0]['hash'] == 'F' * 40
@@ -179,3 +243,27 @@ def test_remove(client):
     assert success == ['B' * 40] and failed == []
     assert client.fake.executed == [['rm', '-rf', '--', '/data/show']]
     assert 'B' * 40 not in client.fake.torrents
+
+
+@pytest.mark.parametrize('client', ['httprpc'], indirect=True)
+def test_remove_httprpc(client):
+    client.torrents_list()
+    success, failed = client.remove_torrents(['A' * 40, 'F' * 40], False)
+    assert success == ['A' * 40] and len(failed) == 1 and failed[0]['hash'] == 'F' * 40
+    assert 'A' * 40 not in client.fake.torrents and client.fake.erased_with_data == []
+
+    # Data is deleted through ruTorrent's erasedata plugin, never with execute.*
+    success, failed = client.remove_torrents(['B' * 40], True)
+    assert success == ['B' * 40] and failed == []
+    assert client.fake.erased_with_data == [('B' * 40, '1')]
+    assert client.fake.executed == []
+
+
+def test_httprpc_unauthorized(mocker):
+    fake = FakeRTorrent()
+    host, stop = _serve_httprpc(fake)
+    try:
+        with pytest.raises(LoginFailure):
+            rTorrent(host).login('user', 'wrong')
+    finally:
+        stop()

@@ -1,15 +1,20 @@
 #-*- coding:utf-8 -*-
+import base64
+import json
 import os
 import socket
 import time
 
 try: # for Python 3
     import xmlrpc.client as xmlrpclib
-    from urllib.parse import quote, unquote, urlparse, urlunparse
+    from urllib.parse import quote, unquote, urlencode, urlparse, urlunparse
+    from urllib.request import Request, urlopen
+    from urllib.error import HTTPError, URLError
 except ImportError: # for Python 2.7
     import xmlrpclib
-    from urllib import quote, unquote
+    from urllib import quote, unquote, urlencode
     from urlparse import urlparse, urlunparse
+    from urllib2 import Request, urlopen, HTTPError, URLError
 
 from ..torrent import Torrent
 from ..clientstatus import ClientStatus
@@ -21,6 +26,13 @@ from ..exception.remotefailure import RemoteFailure
 
 # Default XML-RPC mount point of rTorrent behind a web server (e.g. nginx, ruTorrent)
 DEFAULT_RPC_PATH = '/RPC2'
+
+# Endpoint of ruTorrent's httprpc plugin. It forwards plain XML-RPC requests to rTorrent,
+# but blocks execute.* commands, so torrents are removed through its own API instead
+HTTPRPC_PATH = '/plugins/httprpc/action.php'
+
+# Timeout of httprpc API requests, in seconds
+HTTPRPC_TIMEOUT = 60
 
 # Torrent fields fetched with d.multicall2, in this order
 TORRENT_FIELDS = [
@@ -102,6 +114,9 @@ class rTorrent(object):
         #   scgi:///home/user/.rtorrent.sock (rTorrent network.scgi.open_local)
         self._host = host
         self._proxy = None
+        # URL and Authorization header of ruTorrent's httprpc plugin, when the host points to it
+        self._httprpc_url = None
+        self._httprpc_headers = {}
         # Torrent properties cache
         self._torrent_cache = {}
         self._refresh_expire_time = 30
@@ -127,6 +142,17 @@ class rTorrent(object):
             path = parsed.path if parsed.path not in ('', '/') else DEFAULT_RPC_PATH
             url = urlunparse((scheme, netloc, path, parsed.params, parsed.query, ''))
             self._proxy = xmlrpclib.ServerProxy(url, allow_none=True)
+
+            if path.rstrip('/').endswith(HTTPRPC_PATH):
+                self._httprpc_url = urlunparse((scheme, parsed.netloc.rsplit('@', 1)[-1], path, parsed.params, parsed.query, ''))
+                self._httprpc_headers = {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    # Some web servers drop requests with urllib's default User-Agent
+                    'User-Agent': 'autoremove-torrents',
+                }
+                if username:
+                    token = base64.b64encode(('%s:%s' % (username, password or '')).encode('utf-8')).decode('ascii')
+                    self._httprpc_headers['Authorization'] = 'Basic ' + token
         else:
             raise ConnectionFailure("Unsupported scheme '%s' for rTorrent. "
                 "Use http://, https:// or scgi://." % parsed.scheme)
@@ -146,6 +172,39 @@ class rTorrent(object):
             raise RemoteFailure(e.faultString)
         except (socket.error, IOError, OSError) as e:
             raise ConnectionFailure(str(e))
+
+    # Call ruTorrent's httprpc API (form-encoded request, JSON response)
+    def _httprpc(self, fields):
+        request = Request(self._httprpc_url, data=urlencode(fields).encode('utf-8'), headers=self._httprpc_headers)
+        try:
+            response = urlopen(request, timeout=HTTPRPC_TIMEOUT)
+            try:
+                body = response.read()
+            finally:
+                response.close()
+        except HTTPError as e:
+            if e.code == 401:
+                raise LoginFailure('Unauthorized user.')
+            raise RemoteFailure('%d %s' % (e.code, e.reason))
+        except (URLError, socket.error, IOError, OSError) as e:
+            raise ConnectionFailure(str(e))
+
+        try:
+            result = json.loads(body.decode('utf-8'))
+        except ValueError:
+            raise RemoteFailure('Unexpected response from ruTorrent: %r' % body[:200])
+        # httprpc answers `false` when rTorrent rejects the commands
+        if result is False:
+            raise RemoteFailure('ruTorrent rejected the request.')
+        return result
+
+    # Check whether rTorrent still has the torrent
+    def _has_torrent(self, torrent_hash):
+        try:
+            self._call('d.hash', torrent_hash)
+            return True
+        except RemoteFailure:
+            return False
 
     # Get client status
     def client_status(self):
@@ -314,6 +373,10 @@ class rTorrent(object):
         failed = []
         for torrent_hash in torrent_hash_list:
             try:
+                if self._httprpc_url is not None:
+                    self._remove_via_httprpc(torrent_hash, remove_data)
+                    success.append(torrent_hash)
+                    continue
                 data_path = self._data_path(torrent_hash) if remove_data else None
                 self._call('d.erase', torrent_hash)
                 if remove_data:
@@ -327,3 +390,13 @@ class rTorrent(object):
                     'reason': str(e),
                 })
         return (success, failed)
+
+    # Remove a torrent through ruTorrent's httprpc plugin
+    # With remove_data, the data is deleted by ruTorrent's erasedata plugin, like "Remove and delete data" in the web UI
+    def _remove_via_httprpc(self, torrent_hash, remove_data):
+        if remove_data:
+            self._httprpc([('mode', 'removewithdata'), ('hash', torrent_hash), ('v', '1')])
+        else:
+            self._httprpc([('mode', 'remove'), ('hash', torrent_hash)])
+        if self._has_torrent(torrent_hash):
+            raise RemoteFailure('The torrent is still in rTorrent after removing it.')
