@@ -102,6 +102,40 @@ Example:
 
    For more information of the authentication, please visit https://dev.deluge-torrent.org/wiki/UserGuide/Authentication.
 
+For rTorrent
++++++++++++++
+
+This program accesses rTorrent via its XML-RPC interface, either directly over SCGI or through a web server that exposes it (nginx/lighttpd ``/RPC2`` mount, ruTorrent, etc.).
+
+* ``client``: Your client name. Here is rTorrent.
+* ``host``: One of:
+
+  * ``http://127.0.0.1/RPC2`` or ``https://...``: XML-RPC exposed by a web server. ``/RPC2`` is used when no path is given.
+  * ``scgi://127.0.0.1:5000``: the TCP port opened with ``network.scgi.open_port`` in ``.rtorrent.rc``.
+  * ``scgi:///home/user/.rtorrent.sock``: the UNIX socket opened with ``network.scgi.open_local``.
+
+* ``username``/``password``: HTTP basic authentication of the web server (only for ``http://``/``https://``; leave them out for SCGI).
+
+Example:
+
+.. code-block:: yaml
+
+   my_task:
+     client: rtorrent
+     host: scgi://127.0.0.1:5000
+     strategies:
+       my_strategy:
+         labels: Movies
+         ratio: 2
+     delete_data: true
+
+.. note::
+
+   1. Labels are read from ``d.custom1``, which is where ruTorrent and Flood store them. Comma-separated values are treated as multiple labels. In rTorrent the label is also used as the category, so ``categories`` works too.
+   2. ``d.erase`` never deletes data, so when ``delete_data`` is ``true`` the program runs ``rm -rf`` on the torrent's data path **on the rTorrent host** via ``execute.throw``.
+   3. rTorrent doesn't record the time of last activity, so ``last_activity`` is not supported. ``seeding_time`` and ``downloading_time`` are calculated from ``d.timestamp.started`` and ``d.timestamp.finished``.
+   4. ``remote_free_space`` uses ``d.free_diskspace`` of a torrent stored under the given path.
+
 Part 3: Strategy Block
 ----------------------
 This part contains strategy blocks. Each strategy block can be divided into 3 parts, too.
@@ -114,11 +148,13 @@ Just name your strategy like the task name.
 Part II: Filters
 ++++++++++++++++
 
-The removing condtions are only available for the torrents you chosen. There are 9 filters available.
+The removing condtions are only available for the torrents you chosen. There are 12 filters available.
 
-* ``all_trackers``/``all_categories``/``all_status``: Choose all the trackers/categories/status.
+* ``all_trackers``/``all_categories``/``all_status``/``all_labels``: Choose all the trackers/categories/status/labels.
 * ``categories``: Choose torrents in these categories.
 * ``excluded_categories``: Don't choose torrents in these categories.
+* ``labels``: Choose torrents that have at least one of these labels. Labels are tags in qBittorrent, labels in Transmission, rTorrent (ruTorrent/Flood), μTorrent and Deluge (Label plugin).
+* ``excluded_labels``: Don't choose torrents that have any of these labels.
 * ``trackers``: Choose torrents in these trackers.
 * ``excluded_trackers``: Don't choose torrents in these trackers.
 * ``status``: Choose torrents in these status. Available status is as follows:
@@ -153,7 +189,7 @@ The result of each filter is a set of torrents.
 
 .. note::
 
-   When two or three of ``categories``, ``trackers`` and ``status`` filter are specificed, the program will take the intersection of these sets, and subtracts set ``excluded_categories``, ``excluded_trackers`` and ``excluded_status``.
+   When two or more of ``categories``, ``trackers``, ``status`` and ``labels`` filter are specificed, the program will take the intersection of these sets, and subtracts set ``excluded_categories``, ``excluded_trackers``, ``excluded_status`` and ``excluded_labels``.
 
 
 .. note::

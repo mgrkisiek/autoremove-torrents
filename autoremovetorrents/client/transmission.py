@@ -128,6 +128,7 @@ class Transmission(object):
         torrent_obj.name = torrent['name']
         if 'labels' in torrent:
             torrent_obj.category = torrent['labels']
+            torrent_obj.label = list(torrent['labels'])
         torrent_obj.tracker = [tracker['announce'] for tracker in torrent['trackers']]
         torrent_obj.status = Transmission._judge_status(torrent['status'], torrent['error'])
         torrent_obj.stalled = torrent['isStalled']

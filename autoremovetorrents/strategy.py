@@ -26,6 +26,7 @@ from .condition.uploadspeed import UploadSpeedCondition
 from .conditionparser import ConditionParser
 from .exception.unsupportedproperty import UnsupportedProperty
 from .filter.category import CategoryFilter
+from .filter.label import LabelFilter
 from .filter.status import StatusFilter
 from .filter.tracker import TrackerFilter
 
@@ -51,6 +52,8 @@ class Strategy(object):
             else not 'trackers' in conf
         self._all_status = conf['all_status'] if 'all_status' in conf \
             else not 'status' in conf
+        self._all_labels = conf['all_labels'] if 'all_labels' in conf \
+            else not 'labels' in conf
 
         # Print debug log
         self._logger.debug("Configuration of strategy '%s':" % self._name)
@@ -62,8 +65,9 @@ class Strategy(object):
             {'all':self._all_categories, 'ac':'categories', 're':'excluded_categories'}, # Category filter
             {'all':self._all_status, 'ac':'status', 're':'excluded_status'}, # Status filter
             {'all':self._all_trackers, 'ac':'trackers', 're':'excluded_trackers'}, # Tracker filter
+            {'all':self._all_labels, 'ac':'labels', 're':'excluded_labels'}, # Label filter
         ]
-        filter_obj = [CategoryFilter, StatusFilter, TrackerFilter]
+        filter_obj = [CategoryFilter, StatusFilter, TrackerFilter, LabelFilter]
 
         for i in range(0, len(filter_conf)):
             # Initialize all of the filter arguments
@@ -84,8 +88,8 @@ class Strategy(object):
             self._logger.debug('Applying filter %s...' % filter_obj[i].__name__)
             self._logger.debug('Filter configrations: ALL: %s; ACCEPTANCES: [%s]; REJECTIONS: [%s].' % (
                 filter_conf[i]['all'],
-                ', '.join(self._conf[accept_field]),
-                ', '.join(self._conf[reject_field])
+                ', '.join([str(x) for x in self._conf[accept_field]]),
+                ', '.join([str(x) for x in self._conf[reject_field]])
             ))
             self._logger.debug('INPUT: %d torrent(s) before applying the filter.' % len(self.remain_list))
             for torrent in self.remain_list:

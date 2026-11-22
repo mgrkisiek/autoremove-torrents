@@ -9,7 +9,7 @@ from .util.converttimestamp import convert_timestamp
 class Torrent(object):
     def __init__(self):
         # Proper attributes:
-        # hash, name, category, tracker, status, size, ratio, uploaded, create_time, seeding_time
+        # hash, name, category, label, tracker, status, size, ratio, uploaded, create_time, seeding_time
         # NOTE: The attribute 'last_activity' stores the time interval since last activity,
         #       not the unix timestamp of last activity.
         pass
@@ -30,7 +30,7 @@ class Torrent(object):
             "\tSeeder(connected/total):%d/%d\tLeecher(connected/total):%d/%d\tStatus:%s\n" +
             "\tDownload Speed:%s(Avg.:%s)\tUpload Speed:%s(Avg.:%s)\n" +
             "\tCreate Time:%s\tSeeding Time:%s\tDownloading Time:%s\tLast Activity:%s\n" +
-            "\tCategory:%s\tTracker:%s") % \
+            "\tCategory:%s\tLabels:%s\tTracker:%s") % \
             (
                 disp('name'),
                 disp('progress', lambda x: x*100),
@@ -51,6 +51,7 @@ class Torrent(object):
                 disp('downloading_time', convert_seconds),
                 disp('last_activity', convert_seconds),
                 disp('category', ','.join),
+                disp('label', ','.join),
                 disp('tracker', lambda t: \
                     ','.join(
                         [urlparse_(x).hostname if urlparse_(x).hostname is not None else x for x in t]
