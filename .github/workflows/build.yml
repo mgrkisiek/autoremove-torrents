@@ -138,9 +138,9 @@ jobs:
             os: ubuntu-24.04
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
         cache: pip
@@ -171,11 +171,22 @@ jobs:
       run: |
         echo "DELUGE_2_PASSWORD=$(sudo cat /tmp/deluge-latest/config/auth | sed 's/.*:\(.*\):.*/\1/g')" >> $GITHUB_ENV
         echo "DELUGE_1_PASSWORD=$(sudo cat /tmp/deluge-1/config/auth | sed 's/.*:\(.*\):.*/\1/g')" >> $GITHUB_ENV
-    - name: Setup passwords of qBittorrent latest
+    - name: Get temporary password of qBittorrent latest
       run: |
-        docker stop ${{ job.services.qbittorrent-latest.id }}
-        echo 'WebUI\Password_PBKDF2="@ByteArray(+BwJe86psDlDzA5u7ebg9Q==:yZeQKzvuRW/Mn+qL0FS8Nt91A53x5Ow8YGNOq0KusmleU9xn60RWx9kDXKOEqIe+eJX5bQ9UJ4GgR16UWprRSw==)"' | sudo tee -a /tmp/qbittorrent-latest/config/qBittorrent/qBittorrent.conf
-        docker start ${{ job.services.qbittorrent-latest.id }}
+        # qBittorrent 4.6.1+ has no default password and prints a temporary one at startup
+        for i in $(seq 1 60); do
+          password=$(docker logs ${{ job.services.qbittorrent-latest.id }} 2>&1 \
+            | sed -n 's/.*temporary password is provided for this session: *\([^ ]*\).*/\1/p' | tail -n 1)
+          if [ -n "$password" ]; then break; fi
+          sleep 2
+        done
+        if [ -z "$password" ]; then
+          docker logs ${{ job.services.qbittorrent-latest.id }}
+          echo "::error::Could not find the temporary password of qBittorrent latest"
+          exit 1
+        fi
+        echo "::add-mask::$password"
+        echo "QBITTORRENT_4_PASSWORD=$password" >> $GITHUB_ENV
     - name: Sleep for a while
       run: |
         sleep $((10 + $RANDOM % 50))
@@ -184,7 +195,7 @@ jobs:
         python -m pytest -s --cov-report=xml --cov --log-level=INFO
     - name: Save coverage report
       if: matrix.python-version == env.COVERAGE_PYTHON_VERSION
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: coverage
         path: coverage.xml
@@ -195,9 +206,9 @@ jobs:
     env:
       CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Load coverage report
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: coverage
       - name: Run codacy-coverage-reporter

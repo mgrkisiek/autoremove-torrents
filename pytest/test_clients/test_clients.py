@@ -45,10 +45,10 @@ def test_client(env_dist):
             except Exception as e:
                 # Check if the excpetion is expected
                 found = False
-                for e in exception_map:
-                    if sys.exc_info()[0] == e:
-                        if 'exceptions' in conf and exception_map[e] in conf['exceptions']:
-                            lg.info('An expected exception was raised: %s.' % exception_map[e])
+                for exc_type in exception_map:
+                    if sys.exc_info()[0] == exc_type:
+                        if 'exceptions' in conf and exception_map[exc_type] in conf['exceptions']:
+                            lg.info('An expected exception was raised: %s.' % exception_map[exc_type])
                             found = True
                             break # An expected exception
                 if not found:
