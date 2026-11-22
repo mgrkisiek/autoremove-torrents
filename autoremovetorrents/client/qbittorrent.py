@@ -72,7 +72,10 @@ class qBittorrent(object):
             self._host = host
             # Requests Session
             self._session = requests.Session()
-        
+            # Without Referer, qBittorrent 3.3.x answers this probe with 401 (CSRF protection) instead of 404,
+            # which made v3 clients look compatible with API v2
+            self._session.headers.update({'Referer': self._host})
+
         # Check API Compatibility
         def check_compatibility(self):
             request = self._session.get(self._host+'/api/v2/app/webapiVersion')
