@@ -144,7 +144,8 @@ class qBittorrent(object):
         except Exception as exc:
             raise ConnectionFailure(str(exc))
         
-        if request.status_code == 200:
+        # qBittorrent 5.x answers a successful login with 204 No Content
+        if 200 <= request.status_code < 300:
             if request.text == 'Fails.': # Fail
                 raise LoginFailure(request.text)
         else:
@@ -273,7 +274,7 @@ class qBittorrent(object):
     def remove_torrents(self, torrent_hash_list, remove_data):
         request = self._request_handler.delete_torrents_and_data(torrent_hash_list) if remove_data \
             else self._request_handler.delete_torrents(torrent_hash_list)
-        if request.status_code != 200:
+        if not 200 <= request.status_code < 300:
             return ([], [{
                 'hash': torrent,
                 'reason': 'The server responses HTTP %d.' % request.status_code,
