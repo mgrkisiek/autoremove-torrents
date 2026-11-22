@@ -3,9 +3,18 @@
 
 name: build
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
+  # Python version whose coverage report is sent to Codacy
+  COVERAGE_PYTHON_VERSION: "3.13"
   DELUGE_1_HOST: localhost:48846
   DELUGE_1_USERNAME: localclient
   DELUGE_1_PASSWORD: set-later
@@ -119,20 +128,25 @@ jobs:
           "3.9",
           "3.10",
           "3.11",
-          "3.12"
+          "3.12",
+          "3.13",
+          "3.14"
         ]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+        cache: pip
+        cache-dependency-path: |
+          pyproject.toml
+          dev-requirements.txt
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest
-        python -m pip install --upgrade pytest
         python -m pip install -r dev-requirements.txt
         python -m pip install .
     - name: Lint with flake8
@@ -163,23 +177,28 @@ jobs:
         sleep $((10 + $RANDOM % 50))
     - name: Test with pytest
       run: |
-        py.test -s --cov-report=xml --cov --log-level=INFO
+        python -m pytest -s --cov-report=xml --cov --log-level=INFO
     - name: Save coverage report
-      uses: actions/upload-artifact@v2
+      if: matrix.python-version == env.COVERAGE_PYTHON_VERSION
+      uses: actions/upload-artifact@v4
       with:
-        name: coverage.xml
+        name: coverage
         path: coverage.xml
   codacy-coverage-reporter:
     runs-on: ubuntu-latest
     name: codacy-coverage-reporter
     needs: build
+    env:
+      CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Load coverage report
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
-          name: coverage.xml
+          name: coverage
       - name: Run codacy-coverage-reporter
+        # Forks don't have the Codacy token, so skip uploading there
+        if: env.CODACY_PROJECT_TOKEN != ''
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
