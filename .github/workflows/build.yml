@@ -39,7 +39,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
     services:
       qbittorrent-latest:
         image: lscr.io/linuxserver/qbittorrent:latest
@@ -132,6 +132,10 @@ jobs:
           "3.13",
           "3.14"
         ]
+        include:
+          # Python 3.9 is not available on ubuntu-latest (26.04) any more
+          - python-version: "3.9"
+            os: ubuntu-24.04
 
     steps:
     - uses: actions/checkout@v4

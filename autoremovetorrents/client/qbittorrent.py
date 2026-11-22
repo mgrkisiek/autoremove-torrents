@@ -17,7 +17,9 @@ class qBittorrent(object):
             self._host = host
             # Requests Session
             self._session = requests.Session()
-        
+            # qBittorrent 3.3.x (after 3.3.3) rejects requests without Referer/Origin (CSRF protection)
+            self._session.headers.update({'Referer': self._host})
+
         # Check API Compatibility
         def check_compatibility(self):
             request = self._session.get(self._host+'/version/api')
